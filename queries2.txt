@@ -1,0 +1,85 @@
+Con "GROUP BY" :
+    1. Contare quanti iscritti ci sono stati ogni anno
+    2. Contare gli insegnanti che hanno l'ufficio nello stesso edificio
+    3. Calcolare la media dei voti di ogni appello d'esame
+    4. Contare quanti corsi di laurea ci sono per ogni dipartimento
+
+Con "JOIN" :
+    1. Selezionare tutti gli studenti iscritti al Corso di Laurea in Economia
+    2. Selezionare tutti i Corsi di Laurea Magistrale del Dipartimento di Neuroscienze
+    3. Selezionare tutti i corsi in cui insegna Fulvio Amato (id=44)
+    4. Selezionare tutti gli studenti con i dati relativi al corso di laurea a cui sono iscritti e il relativo dipartimento,
+        in ordine alfabetico per cognome e nome
+    5. Selezionare tutti i corsi di laurea con i relativi corsi e insegnanti
+    6. Selezionare tutti i docenti che insegnano nel Dipartimento di Matematica (54)
+
+    BONUS: Selezionare per ogni studente il numero di tentativi sostenuti per ogni esame,
+        stampando anche il voto massimo. Successivamente, filtrare i tentativi con voto minimo 18.
+
+
+Con "GROUP BY" :
+    1.
+        SELECT YEAR(students.enrolment_date), COUNT(id)
+        FROM students
+        GROUP BY YEAR(enrolment_date);
+
+    2.
+        SELECT COUNT(id) as `same_building_teachers`, `office_address`
+        FROM `teachers`
+        GROUP BY `office_address`;
+    
+    3.
+        SELECT AVG(`vote`), `exam_id`
+        FROM `exam_student`
+        GROUP BY `exam_id`;
+
+    4.
+        SELECT `department_id`, COUNT(id) as `corsi_lauree_per_dipartimento`
+        FROM `degrees`
+        GROUP BY `department_id`;
+
+
+Con "JOIN" :
+    1.
+        SELECT `degrees`.`name`, `students`.`name`, `students`.`surname`
+        FROM `degrees`
+        INNER JOIN `students` ON `degrees`.`id` = `students`.`degree_id`
+        WHERE `degrees`.`id` = 53;
+
+    2.
+        SELECT `degrees`.`name`, `departments`.`name`
+        FROM `departments`
+        INNER JOIN `degrees` ON `departments`.`id` = `degrees`.`department_id`
+        WHERE `departments`.id = 7 AND `degrees`.`level` = "magistrale";
+
+    3.
+        SELECT `courses`.`name` as `course_name`, CONCAT(teachers.name, " ", teachers.surname) AS "teacher"
+        FROM `course_teacher`
+        LEFT JOIN `courses` ON `course_teacher`.`course_id` = `courses`.`id`
+        RIGHT JOIN `teachers` ON `course_teacher`.`teacher_id` = `teachers`.`id`
+        WHERE `course_teacher`.`teacher_id` = 44;
+    
+    4.
+        SELECT CONCAT(`students`.`surname`, " ", `students`.`name`) AS "student", `degrees`.*,  `departments`.`name` AS "department"
+        FROM `students`
+        LEFT JOIN `degrees` ON `students`.`degree_id` = `degrees`.`id`
+        RIGHT JOIN `departments` ON `degrees`.`department_id` = `departments`.`id`
+        ORDER BY `students`.`surname` ASC;
+
+    5.
+        SELECT `degrees`.`name` as "degree_name", CONCAT(`teachers`.`name`, " ", `teachers`.`surname`) AS "teacher", `courses`.`name` as "courses"
+        FROM `degrees`
+        LEFT JOIN `courses` ON `degrees`.`id` = `courses`.`degree_id`
+        LEFT JOIN `course_teacher` ON `courses`.`id` = `course_teacher`.`course_id`
+        LEFT JOIN `teachers` ON `course_teacher`.`teacher_id` = `teachers`.`id`
+        ORDER BY `degrees`.`name` ASC;
+
+    6.
+        SELECT CONCAT(`teachers`.`name`, " ", `teachers`.`surname`) AS "teacher"
+        FROM `departments`
+        INNER JOIN `degrees` ON `departments`.`id` = `degrees`.`department_id`
+        INNER JOIN `courses` ON `degrees`.`id` = `courses`.`degree_id`
+        INNER JOIN `course_teacher` ON `courses`.`id` = `course_teacher`.`course_id`
+        INNER JOIN `teachers` ON `course_teacher`.`teacher_id` = `teachers`.`id`
+        WHERE `departments`.`name` = "Dipartimento di Matematica"
+        GROUP BY `teachers`.`id`
